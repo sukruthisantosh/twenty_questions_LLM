@@ -1,11 +1,9 @@
-"""Simple REST API for Twenty Questions game."""
-import uuid
+"""REST API for Twenty Questions game."""
 from typing import Dict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .core import GameState, MAX_QUESTIONS
-from .players import HumanPlayer, LLMPlayer
-from .constants import PLAYER1, PLAYER2
+from .game_manager import GameManager
 
 app = FastAPI(title="Twenty Questions Game API")
 
@@ -18,78 +16,49 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Simple in-memory game storage
-games: Dict[str, Dict] = {}
+# Game manager instance
+game_manager = GameManager()
 
 
 @app.post("/api/games")
 async def create_game(data: Dict):
     """Create a new game."""
-    game_id = str(uuid.uuid4())
     player1_type = data.get("player1_type", "llm")
     player2_type = data.get("player2_type", "human")
     
-    # Map string types to classes
-    player_classes = {
-        "human": HumanPlayer,
-        "llm": LLMPlayer
-    }
-    
-    p1_class = player_classes.get(player1_type.lower(), LLMPlayer)
-    p2_class = player_classes.get(player2_type.lower(), HumanPlayer)
-    
-    # Create game
-    game_state = GameState()
-    player1 = p1_class(PLAYER1, game_state)
-    player2 = p2_class(PLAYER2, game_state)
-    
-    games[game_id] = {
-        "game_state": game_state,
-        "player1": player1,
-        "player2": player2,
-        "player1_type": player1_type,
-        "player2_type": player2_type,
-        "pending_question": None
-    }
+    game_id = game_manager.create_game(player1_type, player2_type)
+    game = game_manager.get_game(game_id)
+    game_state = game["game_state"]
+    player1 = game["player1"]
     
     # Player 1 sets object
     if player1_type == "llm":
         obj = player1.set_object()
         if obj:
             game_state.set_object(obj)
-            # Return appropriate status based on Player 2 type
-            if player2_type == "llm":
-                return {
-                    "game_id": game_id,
-                    "status": "playing",
-                    "question_count": game_state.question_count
-                }
-            else:
-                # Human Player 2 - they need to ask a question
-                return {
-                    "game_id": game_id,
-                    "status": "waiting_for_question",
-                    "question_count": game_state.question_count
-                }
-        else:
-            raise HTTPException(status_code=500, detail="Failed to set object")
-    else:
-        return {
-            "game_id": game_id,
-            "status": "waiting_for_object",
-            "message": "Please set the object"
-        }
+            status = "playing" if player2_type == "llm" else "waiting_for_question"
+            return {
+                "game_id": game_id,
+                "status": status,
+                "question_count": game_state.question_count
+            }
+        raise HTTPException(status_code=500, detail="Failed to set object")
+    
+    return {
+        "game_id": game_id,
+        "status": "waiting_for_object",
+        "message": "Please set the object"
+    }
 
 
 @app.post("/api/games/{game_id}/object")
 async def set_object(game_id: str, data: Dict):
     """Set object when Player 1 is human."""
-    if game_id not in games:
+    game = game_manager.get_game(game_id)
+    if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     
-    game = games[game_id]
     obj = data.get("object", "").strip()
-    
     if not obj:
         raise HTTPException(status_code=400, detail="Object required")
     
@@ -104,10 +73,9 @@ async def set_object(game_id: str, data: Dict):
 @app.get("/api/games/{game_id}/next")
 async def get_next_action(game_id: str):
     """Get the next action (LLM acts automatically, or returns what human needs to do)."""
-    if game_id not in games:
+    game = game_manager.get_game(game_id)
+    if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    
-    game = games[game_id]
     gs = game["game_state"]
     
     if not gs.is_playing():
@@ -217,10 +185,9 @@ async def get_next_action(game_id: str):
 @app.post("/api/games/{game_id}/action")
 async def submit_action(game_id: str, data: Dict):
     """Submit human player action."""
-    if game_id not in games:
+    game = game_manager.get_game(game_id)
+    if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    
-    game = games[game_id]
     gs = game["game_state"]
     
     if not gs.is_playing():
@@ -358,10 +325,9 @@ async def submit_action(game_id: str, data: Dict):
 @app.get("/api/games/{game_id}")
 async def get_game_state(game_id: str):
     """Get current game state."""
-    if game_id not in games:
+    game = game_manager.get_game(game_id)
+    if not game:
         raise HTTPException(status_code=404, detail="Game not found")
-    
-    game = games[game_id]
     gs = game["game_state"]
     
     return {

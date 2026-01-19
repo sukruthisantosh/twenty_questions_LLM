@@ -23,6 +23,25 @@ python run_api.py
 
 The API will be available at `http://localhost:8000`
 
+## Project Structure
+
+```
+take_home/
+├── backend/              # Backend Python code
+│   ├── api.py           # FastAPI REST endpoints
+│   ├── game_manager.py  # Game session management
+│   ├── core/            # Core game logic (GameState, Player)
+│   ├── players/         # Player implementations (Human, LLM)
+│   ├── llm_client.py   # LLM API client
+│   ├── prompts.py      # Prompt templates
+│   └── validators.py   # Response validation
+├── frontend/            # React frontend
+│   └── src/
+│       ├── App.jsx
+│       └── components/
+└── run_api.py          # Server entry point
+```
+
 ### Frontend
 
 1. Navigate to the frontend directory:

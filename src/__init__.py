@@ -1,2 +1,0 @@
-"""Twenty Questions game package."""
-
