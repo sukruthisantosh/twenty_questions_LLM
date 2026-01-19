@@ -17,11 +17,6 @@ GAME_MODES = {
         "name": "LLM vs LLM",
         "description": "Watch two LLMs play against each other",
         "players": (LLMPlayer, LLMPlayer)
-    },
-    "4": {
-        "name": "Human vs Human",
-        "description": "Two human players",
-        "players": (HumanPlayer, HumanPlayer)
     }
 }
 
