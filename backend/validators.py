@@ -1,13 +1,9 @@
-"""Minimal response validation utilities."""
+"""Response validation utilities."""
 import re
 
 
 def validate_yes_no(answer):
-    """Normalize yes/no answer to "yes" or "no".
-    
-    Returns:
-        str: "yes" or "no", defaults to "no" if unclear
-    """
+    """Normalise yes/no answer to "yes" or "no"."""
     if not answer:
         return "no"
     
@@ -20,11 +16,7 @@ def validate_yes_no(answer):
 
 
 def validate_guess(guess):
-    """Extract object name from guess, removing common prefixes.
-    
-    Returns:
-        str: Cleaned guess, or original if cleaning fails
-    """
+    """Extract object name from guess, removing common prefixes."""
     if not guess:
         return None
     

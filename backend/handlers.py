@@ -59,7 +59,6 @@ def handle_ask_question(game: Dict, content: str) -> Dict:
     question = content
     gs = game["game_state"]
     
-    # Player 1 answers
     if game["player1_type"] == "llm":
         answer = game["player1"].answer_question(question)
         gs.increment_question()
@@ -115,6 +114,7 @@ def handle_make_guess(game: Dict, content: str) -> Dict:
                 "guess": guess,
                 "correct": False,
                 "question_count": gs.question_count,
+                "max_questions": MAX_QUESTIONS,
                 "message": "Wrong guess! You can ask another question or make another guess."
             }
         else:

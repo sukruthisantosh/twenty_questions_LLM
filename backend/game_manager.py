@@ -6,22 +6,13 @@ from .constants import PLAYER1, PLAYER2
 
 
 class GameManager:
-    """Manages game sessions and player actions."""
+    """Manages game sessions."""
     
     def __init__(self):
-        """Initialize game manager."""
         self.games: Dict[str, Dict] = {}
     
     def create_game(self, player1_type: str, player2_type: str) -> str:
-        """Create a new game session.
-        
-        Args:
-            player1_type: "human" or "llm"
-            player2_type: "human" or "llm"
-        
-        Returns:
-            game_id: Unique game identifier
-        """
+        """Create a new game session."""
         import uuid
         game_id = str(uuid.uuid4())
         
@@ -49,25 +40,11 @@ class GameManager:
         return game_id
     
     def get_game(self, game_id: str) -> Optional[Dict]:
-        """Get game session by ID.
-        
-        Args:
-            game_id: Game identifier
-        
-        Returns:
-            Game dict or None if not found
-        """
+        """Get game session by ID."""
         return self.games.get(game_id)
     
     def delete_game(self, game_id: str) -> bool:
-        """Delete a game session.
-        
-        Args:
-            game_id: Game identifier
-        
-        Returns:
-            True if deleted, False if not found
-        """
+        """Delete a game session."""
         if game_id in self.games:
             del self.games[game_id]
             return True

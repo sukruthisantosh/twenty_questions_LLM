@@ -16,7 +16,7 @@ function App() {
     const [inputValue, setInputValue] = useState('')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
-    const [actionMode, setActionMode] = useState('question') // 'question' or 'guess'
+    const [actionMode, setActionMode] = useState('question')
 
     const createGame = async (player1Type, player2Type) => {
         setLoading(true)
@@ -67,11 +67,11 @@ function App() {
                 setQuestionHistory(prev => [...prev, { question: data.question, answer: data.answer }])
             }
 
-            // If guess was made, add to history
+            // If guess was made, add to history (for CLI-like output)
             if (data.guess) {
                 setQuestionHistory(prev => [...prev, {
                     question: `Guess: ${data.guess}`,
-                    answer: data.correct ? 'Correct!' : 'Wrong'
+                    answer: data.correct ? 'Correct!' : 'Incorrect'
                 }])
             }
         } catch (err) {
@@ -119,17 +119,15 @@ function App() {
 
             setInputValue('')
 
-            // If game continues and LLM needs to act, get next action
-            if (data.status === 'question_answered' && !data.game_over && mode?.player2 === 'llm') {
-                setTimeout(getNextAction, 500)
+            // Auto-advance for LLM Player 2 after actions
+            if (mode?.player2 === 'llm' && !data.game_over) {
+                if ((data.status === 'question_answered' || data.status === 'guess_incorrect') ||
+                    (data.status === 'playing' && actionType === 'set_object')) {
+                    setTimeout(getNextAction, 500)
+                }
             }
-            // If object was just set and Player 2 is LLM, start the game
-            else if (data.status === 'playing' && mode?.player2 === 'llm' && actionType === 'set_object') {
-                setTimeout(getNextAction, 500)
-            }
-            // If question was answered and Player 2 is Human, keep status as 'question_answered' 
-            // but allow them to ask another question (handled in needsInput check)
-            // Reset action mode to question after each action
+
+            // Reset action mode after question/guess
             if (actionType === 'ask_question' || actionType === 'make_guess') {
                 setActionMode('question')
             }
@@ -141,8 +139,8 @@ function App() {
     }
 
     const validateAnswer = (answer) => {
-        const normalized = answer.trim().toLowerCase()
-        return ['yes', 'no', 'y', 'n'].includes(normalized)
+        const normalised = answer.trim().toLowerCase()
+        return ['yes', 'no', 'y', 'n'].includes(normalised)
     }
 
     const handleSubmit = (e) => {
@@ -162,36 +160,18 @@ function App() {
             return
         }
 
+        // Simple routing based on status and action mode
         if (status === 'waiting_for_object') {
             submitAction('set_object', value)
-        } else if (status === 'waiting_for_question' ||
-            (status === 'question_answered' && mode?.player2 === 'human' && !gameState.game_over) ||
-            (status === 'guess_incorrect' && mode?.player2 === 'human' && !gameState.game_over)) {
-            // Check if user typed "guess:" or "g:" prefix
-            const lowerValue = value.toLowerCase().trim()
-            if (lowerValue.startsWith('guess:') || lowerValue.startsWith('g:')) {
-                const guess = value.split(':').slice(1).join(':').trim()
-                if (guess) {
-                    submitAction('make_guess', guess)
-                } else {
-                    setError('Please enter a guess after "guess:"')
-                }
-            } else if (actionMode === 'guess') {
-                submitAction('make_guess', value)
-            } else {
-                submitAction('ask_question', value)
-            }
         } else if (status === 'waiting_for_guess') {
             submitAction('make_guess', value)
-        } else if (status === 'waiting_for_decision') {
-            // If user types 'g' or 'guess', they want to guess
-            const lowerValue = value.toLowerCase()
-            if (lowerValue === 'g' || lowerValue === 'guess') {
-                // Prompt for guess
-                setGameState({ ...gameState, status: 'waiting_for_guess' })
-                setInputValue('')
+        } else if (status === 'waiting_for_question' ||
+            status === 'waiting_for_decision' ||
+            (status === 'question_answered' && mode?.player2 === 'human' && !gameState.game_over) ||
+            (status === 'guess_incorrect' && mode?.player2 === 'human' && !gameState.game_over)) {
+            if (actionMode === 'guess') {
+                submitAction('make_guess', value)
             } else {
-                // Otherwise, treat as question
                 submitAction('ask_question', value)
             }
         }
@@ -206,35 +186,25 @@ function App() {
         setError(null)
     }
 
-    // Auto-advance for LLM players
+    // Auto-advance for LLM players - simplified logic
     useEffect(() => {
-        if (!gameId || !gameState || loading) return
+        if (!gameId || !gameState || loading || mode?.player2 !== 'llm') return
+        if (gameState.game_over) return
 
         const status = gameState.status
+        // Auto-advance if LLM needs to act (not waiting for human input)
+        const shouldAdvance =
+            status === 'playing' ||
+            status === 'question_answered' ||
+            status === 'guess_incorrect'
 
-        // Continue game if:
-        // 1. Game is still playing (not over)
-        // 2. Player 2 is LLM (needs to act)
-        // 3. Status indicates we should continue (playing, question_answered, guess_incorrect)
-        const shouldContinue =
-            (status === 'playing' || status === 'question_answered' || status === 'guess_incorrect') &&
-            status !== 'game_over' &&
-            status !== 'waiting_for_object' &&
-            status !== 'waiting_for_answer' &&
-            status !== 'waiting_for_question' &&
-            status !== 'waiting_for_guess' &&
-            status !== 'waiting_for_decision' &&
-            status !== 'error' &&
-            !gameState.game_over &&
-            mode?.player2 === 'llm'
-
-        if (shouldContinue) {
+        if (shouldAdvance) {
             const timer = setTimeout(() => {
                 getNextAction()
             }, 1500)
             return () => clearTimeout(timer)
         }
-    }, [gameState, gameId, mode, loading])
+    }, [gameState, gameId, mode, loading, getNextAction])
 
     if (!mode) {
         return <ModeSelector onCreateGame={createGame} />
@@ -249,11 +219,9 @@ function App() {
         status === 'waiting_for_object' ||
         status === 'waiting_for_answer' ||
         status === 'waiting_for_question' ||
-        status === 'waiting_for_guess' ||
         status === 'waiting_for_decision' ||
-        // Allow input if question was answered and Player 2 is Human (can ask another question)
+        status === 'waiting_for_guess' ||
         (status === 'question_answered' && !gameState.game_over && mode?.player2 === 'human') ||
-        // Allow input after wrong guess if Player 2 is Human and game continues
         (status === 'guess_incorrect' && !gameState.game_over && mode?.player2 === 'human')
 
     return (

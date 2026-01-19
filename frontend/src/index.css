@@ -37,23 +37,14 @@ h1 {
     white-space: nowrap;
 }
 
-.exit-button:hover {
-    background: #c82333;
-}
-
 button {
     padding: 10px 20px;
     margin: 5px;
-    border: none;
-    border-radius: 5px;
+    border: 1px solid #007bff;
     background: #007bff;
     color: white;
     cursor: pointer;
     font-size: 16px;
-}
-
-button:hover {
-    background: #0056b3;
 }
 
 button:disabled {
@@ -64,7 +55,6 @@ button:disabled {
 input {
     padding: 10px;
     border: 1px solid #ddd;
-    border-radius: 5px;
     font-size: 16px;
     width: 100%;
     margin: 10px 0;
@@ -73,8 +63,7 @@ input {
 .game-container {
     background: white;
     padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
 }
 
 .mode-selector {
@@ -92,7 +81,7 @@ input {
     margin: 20px 0;
     padding: 15px;
     background: #f8f9fa;
-    border-radius: 5px;
+    border: 1px solid #ddd;
 }
 
 .question-history {
@@ -103,13 +92,13 @@ input {
     padding: 10px;
     margin: 5px 0;
     background: #e9ecef;
-    border-radius: 5px;
+    border: 1px solid #ddd;
 }
 
 .status-message {
     padding: 15px;
     margin: 10px 0;
-    border-radius: 5px;
+    border: 1px solid #ddd;
     background: #d4edda;
     color: #155724;
 }

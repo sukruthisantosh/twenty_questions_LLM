@@ -2,11 +2,7 @@
 
 
 def get_set_object_prompt():
-    """Generate prompt for Player 1 to choose an object.
-    
-    Returns:
-        str: Prompt asking LLM to choose a common object
-    """
+    """Generate prompt for Player 1 to choose an object."""
     return """You are playing Twenty Questions as Player 1. Think of a common, concrete object that someone could guess in 20 yes/no questions.
 
 IMPORTANT: Choose a RANDOM and VARIED object. Try to pick something different from what you might have chosen before.
@@ -25,14 +21,7 @@ Pick ONE specific object. Respond with ONLY the object name, nothing else."""
 
 
 def get_ask_question_prompt(conversation_history):
-    """Generate prompt for Player 2 to ask a strategic question.
-    
-    Args:
-        conversation_history: List of dicts with 'question' and 'answer' keys
-    
-    Returns:
-        str: Prompt asking LLM to ask a strategic yes/no question
-    """
+    """Generate prompt for Player 2 to ask a strategic question."""
     prompt = """You are playing Twenty Questions as Player 2. Your goal is to guess the object Player 1 is thinking of by asking strategic yes/no questions.
 
 STRATEGY:
@@ -60,14 +49,7 @@ Ask ONE strategic yes/no question that will help you narrow down what the object
 
 
 def get_make_guess_prompt(conversation_history):
-    """Generate prompt for Player 2 to make a guess.
-    
-    Args:
-        conversation_history: List of dicts with 'question' and 'answer' keys
-    
-    Returns:
-        str: Prompt asking LLM to make a guess based on Q&A history
-    """
+    """Generate prompt for Player 2 to make a guess."""
     prompt = """You are playing Twenty Questions as Player 2. Based on all the questions and answers, make your best guess for what object Player 1 is thinking of.
 
 Think about what you've learned:
@@ -87,15 +69,7 @@ Respond with ONLY the object name, nothing else. Do not add prefixes like "I thi
 
 
 def get_decide_action_prompt(remaining_questions, conversation_history):
-    """Generate prompt for Player 2 to decide whether to ask or guess.
-    
-    Args:
-        remaining_questions: Number of questions remaining
-        conversation_history: List of dicts with 'question' and 'answer' keys
-    
-    Returns:
-        str: Prompt asking LLM to decide between asking a question or making a guess
-    """
+    """Generate prompt for Player 2 to decide whether to ask or guess."""
     prompt = f"""You are playing Twenty Questions as Player 2. You have {remaining_questions} questions remaining.
 
 DECISION CRITERIA:
@@ -119,15 +93,7 @@ IMPORTANT: Respond with ONLY the single word "guess" or "question", nothing else
 
 
 def get_answer_question_prompt(chosen_object, question):
-    """Generate prompt for Player 1 to answer a question truthfully.
-    
-    Args:
-        chosen_object: The object Player 1 is thinking of
-        question: The yes/no question being asked
-    
-    Returns:
-        str: Prompt asking LLM to answer truthfully with yes/no
-    """
+    """Generate prompt for Player 1 to answer a question truthfully."""
     return f"""You are playing Twenty Questions as Player 1. You are thinking of: {chosen_object}
 
 Player 2 has asked you this question: {question}

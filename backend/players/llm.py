@@ -24,7 +24,6 @@ class LLMPlayer(Player):
         """Player 2 asks a yes/no question using the LLM."""
         if self.role == PLAYER2:
             prompt = get_ask_question_prompt(self.conversation_history)
-            
             try:
                 messages = [{"role": "user", "content": prompt}]
                 question = call_llm(messages)
@@ -38,7 +37,6 @@ class LLMPlayer(Player):
         """Player 2 makes a guess using the LLM."""
         if self.role == PLAYER2:
             prompt = get_make_guess_prompt(self.conversation_history)
-            
             try:
                 messages = [{"role": "user", "content": prompt}]
                 guess = call_llm(messages)
@@ -55,16 +53,13 @@ class LLMPlayer(Player):
         """Decide whether to ask a question or make a guess."""
         if self.role == PLAYER2:
             remaining = 20 - self.game_state.question_count
-            
             if remaining <= 2:
                 return "guess"
             
             prompt = get_decide_action_prompt(remaining, self.conversation_history)
-            
             try:
                 messages = [{"role": "user", "content": prompt}]
                 decision = call_llm(messages).strip().lower()
-                
                 if decision.startswith("guess") or decision == "g":
                     return "guess"
                 return "question"
@@ -77,7 +72,6 @@ class LLMPlayer(Player):
         """Player 1 thinks of an object using the LLM."""
         if self.role == PLAYER1:
             prompt = get_set_object_prompt()
-            
             try:
                 messages = [{"role": "user", "content": prompt}]
                 obj = call_llm(messages).strip()
@@ -91,13 +85,12 @@ class LLMPlayer(Player):
         return None
     
     def answer_question(self, question):
-        """Player 1 answers a yes/no question truthfully based on the chosen object."""
+        """Player 1 answers a yes/no question truthfully."""
         if self.role == PLAYER1:
             if not self.chosen_object:
                 self.chosen_object = self.game_state.object
             
             prompt = get_answer_question_prompt(self.chosen_object, question)
-            
             try:
                 messages = [{"role": "user", "content": prompt}]
                 answer = call_llm(messages)
@@ -114,7 +107,7 @@ class LLMPlayer(Player):
         return None
     
     def record_interaction(self, question, answer):
-        """Record a question-answer interaction for conversation history."""
+        """Record a question-answer interaction."""
         if self.role == PLAYER2:
             self.conversation_history.append({
                 "question": question,

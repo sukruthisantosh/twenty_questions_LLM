@@ -73,7 +73,7 @@ async def set_object(game_id: str, data: Dict):
 
 @app.get("/api/games/{game_id}/next")
 async def get_next_action(game_id: str):
-    """Get the next action (LLM acts automatically, or returns what human needs to do)."""
+    """Get the next action."""
     game = game_manager.get_game(game_id)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -88,7 +88,6 @@ async def get_next_action(game_id: str):
             "winner": "Player 2" if gs.status == "won" else "Player 1"
         }
     
-    # Check if there's a pending question
     if game.get("pending_question"):
         return {
             "status": "waiting_for_answer",
@@ -96,17 +95,14 @@ async def get_next_action(game_id: str):
             "question_count": gs.question_count
         }
     
-    # Player 2 decides what to do
     if game["player2_type"] == "llm":
         action = game["player2"].decide_action()
     else:
-        # Human Player 2 - they need to decide
         return {
             "status": "waiting_for_decision",
             "question_count": gs.question_count
         }
     
-    # Execute action
     if action == "guess":
         guess = game["player2"].make_guess()
         if guess:

@@ -11,7 +11,7 @@ class Player(ABC):
     
     @abstractmethod
     def set_object(self):
-        """Player 1 sets the object they're thinking of."""
+        """Player 1 sets the object."""
         pass
     
     @abstractmethod
@@ -31,10 +31,10 @@ class Player(ABC):
     
     @abstractmethod
     def decide_action(self):
-        """Player 2 decides whether to ask a question or make a guess."""
+        """Player 2 decides whether to ask or guess."""
         pass
     
     def record_interaction(self, question, answer):
-        """Record a question-answer interaction. Override if needed."""
+        """Record a question-answer interaction."""
         pass
 

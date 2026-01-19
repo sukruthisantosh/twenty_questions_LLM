@@ -18,19 +18,7 @@ class LLMError(Exception):
 
 
 def call_llm(messages, model="gpt-5-mini-2025-08-07", max_retries=MAX_RETRIES):
-    """Call the LLM API with retry logic and return the text response.
-    
-    Args:
-        messages: List of message dicts
-        model: Model name
-        max_retries: Maximum number of retry attempts
-    
-    Returns:
-        str: The text response from the LLM
-    
-    Raises:
-        LLMError: If API call fails after retries
-    """
+    """Call the LLM API with retry logic."""
     if not CANDIDATE_API_KEY:
         raise LLMError("CANDIDATE_API_KEY not found in environment variables")
     

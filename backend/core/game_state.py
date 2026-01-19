@@ -16,7 +16,6 @@ class GameState:
     def increment_question(self):
         """Increment question count and check win/loss conditions."""
         self.question_count += 1
-        
         if self.question_count >= MAX_QUESTIONS:
             self.status = LOST
     
