@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .core import GameState, MAX_QUESTIONS
 from .game_manager import GameManager
+from .handlers import handle_set_object, handle_answer_question, handle_ask_question, handle_make_guess
 
 app = FastAPI(title="Twenty Questions Game API")
 
@@ -196,130 +197,18 @@ async def submit_action(game_id: str, data: Dict):
     action_type = data.get("action_type")
     content = data.get("content", "").strip()
     
-    if action_type == "set_object":
-        if game["player1_type"] != "human":
-            raise HTTPException(status_code=400, detail="Only human Player 1 can set object")
-        gs.set_object(content)
-        return {
-            "status": "playing",
-            "question_count": gs.question_count,
-            "max_questions": MAX_QUESTIONS,
-            "player1_type": game["player1_type"],
-            "player2_type": game["player2_type"]
-        }
+    handlers = {
+        "set_object": handle_set_object,
+        "answer_question": handle_answer_question,
+        "ask_question": handle_ask_question,
+        "make_guess": handle_make_guess
+    }
     
-    elif action_type == "answer_question":
-        if not game.get("pending_question"):
-            raise HTTPException(status_code=400, detail="No pending question")
-        
-        answer = content.lower()
-        if answer not in ["yes", "no", "y", "n"]:
-            raise HTTPException(status_code=400, detail="Answer must be yes/no")
-        
-        answer = "yes" if answer in ["yes", "y"] else "no"
-        question = game["pending_question"]
-        game["pending_question"] = None
-        
-        gs.increment_question()
-        game["player2"].record_interaction(question, answer)
-        
-        return {
-            "status": "question_answered",
-            "question": question,
-            "answer": answer,
-            "question_count": gs.question_count,
-            "game_status": gs.status,
-            "game_over": not gs.is_playing(),
-            "object": gs.object if not gs.is_playing() else None,
-            "winner": "Player 1" if not gs.is_playing() else None
-        }
+    handler = handlers.get(action_type)
+    if not handler:
+        raise HTTPException(status_code=400, detail="Invalid action type")
     
-    elif action_type == "ask_question":
-        if game["player2_type"] != "human":
-            raise HTTPException(status_code=400, detail="Only human Player 2 can ask questions")
-        
-        if not content:
-            raise HTTPException(status_code=400, detail="Question required")
-        
-        question = content
-        
-        # Player 1 answers
-        if game["player1_type"] == "llm":
-            answer = game["player1"].answer_question(question)
-            gs.increment_question()
-            game["player2"].record_interaction(question, answer)
-            
-            return {
-                "status": "question_answered",
-                "question": question,
-                "answer": answer,
-                "question_count": gs.question_count,
-                "game_status": gs.status,
-                "game_over": not gs.is_playing(),
-                "object": gs.object if not gs.is_playing() else None,
-                "winner": "Player 1" if not gs.is_playing() else None
-            }
-        else:
-            # Human Player 1 - wait for answer
-            game["pending_question"] = question
-            return {
-                "status": "waiting_for_answer",
-                "question": question,
-                "question_count": gs.question_count
-            }
-    
-    elif action_type == "make_guess":
-        if game["player2_type"] != "human":
-            raise HTTPException(status_code=400, detail="Only human Player 2 can make guesses")
-        
-        if not content:
-            raise HTTPException(status_code=400, detail="Guess required")
-        
-        guess = content
-        gs.increment_question()
-        
-        if guess.lower() == gs.object.lower():
-            gs.win()
-            return {
-                "status": "game_over",
-                "guess": guess,
-                "correct": True,
-                "object": gs.object,
-                "question_count": gs.question_count,
-                "winner": "Player 2"
-            }
-        else:
-            # Wrong guess - game continues if questions remain
-            if gs.is_playing():
-                # Game continues - return status based on player type
-                if game["player2_type"] == "human":
-                    return {
-                        "status": "waiting_for_question",
-                        "guess": guess,
-                        "correct": False,
-                        "question_count": gs.question_count,
-                        "message": "Wrong guess! You can ask another question or make another guess."
-                    }
-                else:
-                    # LLM Player 2 - will continue automatically
-                    return {
-                        "status": "guess_incorrect",
-                        "guess": guess,
-                        "correct": False,
-                        "question_count": gs.question_count
-                    }
-            else:
-                # Game over - no questions left
-                return {
-                    "status": "game_over",
-                    "guess": guess,
-                    "correct": False,
-                    "object": gs.object,
-                    "question_count": gs.question_count,
-                    "winner": "Player 1"
-                }
-    
-    raise HTTPException(status_code=400, detail="Invalid action type")
+    return handler(game, content)
 
 
 @app.get("/api/games/{game_id}")

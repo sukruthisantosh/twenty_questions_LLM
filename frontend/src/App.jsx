@@ -258,7 +258,10 @@ function App() {
 
     return (
         <div className="game-container">
-            <h1>Twenty Questions</h1>
+            <div className="header-with-exit">
+                <h1>Twenty Questions</h1>
+                <button onClick={resetGame} className="exit-button">Exit Game</button>
+            </div>
 
             {error && <div className="status-message error">Error: {error}</div>}
 
