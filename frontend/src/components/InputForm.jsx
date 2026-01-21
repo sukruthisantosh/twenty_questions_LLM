@@ -28,13 +28,13 @@ export default function InputForm({
         (status === 'guess_incorrect' && mode?.player2 === 'human' && !gameState?.game_over))
 
     const getPlaceholder = () => {
-        if (status === 'waiting_for_object') return 'Enter object...'
+        if (status === 'waiting_for_object') return 'Enter object name (e.g., "apple")...'
         if (status === 'waiting_for_answer') return 'yes/no'
-        if (status === 'waiting_for_guess') return 'Enter guess...'
+        if (status === 'waiting_for_guess') return 'Enter object name only (e.g., "apple")...'
         if (canChooseAction) {
-            return actionMode === 'guess' ? 'Enter your guess...' : 'Enter question...'
+            return actionMode === 'guess' ? 'Enter object name only (e.g., "apple")...' : 'Enter yes/no question...'
         }
-        return 'Enter question...'
+        return 'Enter yes/no question...'
     }
 
     const handleChange = (e) => {

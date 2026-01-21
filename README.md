@@ -6,17 +6,23 @@ A simple implementation of the Twenty Questions game with LLM integration.
 
 ### Backend
 
-1. Install Python dependencies:
+1. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+2. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Create a `.env` file in the root directory with your API key:
+3. Create a `.env` file in the root directory with your API key:
 ```
 CANDIDATE_API_KEY=your_api_key_here
 ```
 
-3. Run the API server:
+4. Run the API server:
 ```bash
 python run_api.py
 ```

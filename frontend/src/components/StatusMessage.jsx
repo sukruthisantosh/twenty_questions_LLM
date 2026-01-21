@@ -43,7 +43,10 @@ export default function StatusMessage({ status, gameState, mode }) {
     if (status === 'waiting_for_guess') {
         return (
             <div className="status-message">
-                <p>Make your guess:</p>
+                <p><strong>Make your guess:</strong></p>
+                <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                    Enter only the object name (1-2 words max, e.g., "apple" or "ice cream")
+                </p>
             </div>
         )
     }
@@ -56,7 +59,7 @@ export default function StatusMessage({ status, gameState, mode }) {
                 <div className="status-message">
                     <p><strong>Q:</strong> {gameState.question}</p>
                     <p><strong>A:</strong> {gameState.answer}</p>
-                    <p>Ask another question or make a guess:</p>
+                    <p>Ask another yes/no question or make a guess (object name only):</p>
                 </div>
             )
         }

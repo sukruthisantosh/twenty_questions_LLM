@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './index.css'
 import ModeSelector from './components/ModeSelector'
 import GameInfo from './components/GameInfo'
+import GameRules from './components/GameRules'
 import StatusMessage from './components/StatusMessage'
 import QuestionHistory from './components/QuestionHistory'
 import InputForm from './components/InputForm'
@@ -141,6 +142,20 @@ function App() {
         return ['yes', 'no', 'y', 'n'].includes(normalised)
     }
 
+    const validateGuess = (guess) => {
+        const trimmed = guess.trim()
+        // Allow single words or common compound words (like "ice cream", "baseball", etc.)
+        // But restrict to max 2 words to prevent full sentences
+        const words = trimmed.split(/\s+/)
+        if (words.length > 2) {
+            return { valid: false, error: 'Please enter only the object name (1-2 words max)' }
+        }
+        if (trimmed.length === 0) {
+            return { valid: false, error: 'Please enter an object name' }
+        }
+        return { valid: true }
+    }
+
     const handleSubmit = (e) => {
         e.preventDefault()
         if (!inputValue.trim()) return
@@ -156,6 +171,19 @@ function App() {
             }
             submitAction('answer_question', value)
             return
+        }
+
+        // Validate guess before submitting
+        if (status === 'waiting_for_guess' ||
+            (actionMode === 'guess' && (status === 'waiting_for_question' ||
+                status === 'waiting_for_decision' ||
+                (status === 'question_answered' && mode?.player2 === 'human' && !gameState.game_over) ||
+                (status === 'guess_incorrect' && mode?.player2 === 'human' && !gameState.game_over)))) {
+            const guessValidation = validateGuess(value)
+            if (!guessValidation.valid) {
+                setError(guessValidation.error)
+                return
+            }
         }
 
         // Simple routing based on status and action mode
@@ -231,6 +259,7 @@ function App() {
             {error && <div className="status-message error">Error: {error}</div>}
 
             <GameInfo gameState={gameState} mode={mode} />
+            <GameRules mode={mode} />
             <StatusMessage status={status} gameState={gameState} mode={mode} />
 
             <InputForm

@@ -90,6 +90,11 @@ def handle_make_guess(game: Dict, content: str) -> Dict:
     
     if not content:
         raise HTTPException(status_code=400, detail="Guess required")
+
+    # Validate guess is reasonable (1-2 words max)
+    words = content.strip().split()
+    if len(words) > 2:
+        raise HTTPException(status_code=400, detail="Please enter only the object name (1-2 words max)")
     
     guess = content
     gs = game["game_state"]
