@@ -9,13 +9,13 @@ import InputForm from './components/InputForm'
 const API_BASE = '/api'
 
 function App() {
-    const [mode, setMode] = useState(null)
-    const [gameState, setGameState] = useState(null)
+    const [mode, setMode] = useState(null) // Player 1 and Player 2 types
+    const [gameState, setGameState] = useState(null) // Current game state
     const [questionHistory, setQuestionHistory] = useState([])
-    const [inputValue, setInputValue] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
-    const [actionMode, setActionMode] = useState('question')
+    const [inputValue, setInputValue] = useState('') // User input
+    const [loading, setLoading] = useState(false) // Loading state
+    const [error, setError] = useState(null) // Error state
+    const [actionMode, setActionMode] = useState('question') // Action mode (question or guess)
 
     const createGame = async (player1Type, player2Type) => {
         setLoading(true)
@@ -183,7 +183,7 @@ function App() {
         setError(null)
     }
 
-    // Auto-advance for LLM players - simplified logic
+    // Auto-advance for LLM players
     useEffect(() => {
         if (!gameState || loading || mode?.player2 !== 'llm') return
         if (gameState.game_over) return
@@ -198,7 +198,7 @@ function App() {
         if (shouldAdvance) {
             const timer = setTimeout(() => {
                 getNextAction()
-            }, 1500)
+            }, 1000)
             return () => clearTimeout(timer)
         }
     }, [gameState, mode, loading, getNextAction])

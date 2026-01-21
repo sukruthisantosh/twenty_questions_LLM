@@ -30,6 +30,7 @@ take_home/
 ├── backend/              # Backend Python code
 │   ├── api.py           # FastAPI REST endpoints
 │   ├── game_manager.py  # Game session management
+│   ├── handlers.py      # Request handlers for game actions
 │   ├── core/            # Core game logic (GameState, Player)
 │   ├── players/         # Player implementations (Human, LLM)
 │   ├── llm_client.py   # LLM API client

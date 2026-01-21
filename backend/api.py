@@ -109,6 +109,7 @@ async def get_next_action():
     if not gs.is_playing():
         return {
             "status": "game_over",
+            "game_over": True,
             "game_status": gs.status,
             "object": gs.object,
             "question_count": gs.question_count,
@@ -141,6 +142,7 @@ async def get_next_action():
                 gs.win()
                 return {
                     "status": "game_over",
+                    "game_over": True,
                     "action": "guess",
                     "guess": guess,
                     "correct": True,
@@ -163,6 +165,7 @@ async def get_next_action():
                     # Game over, no questions left
                     return {
                         "status": "game_over",
+                        "game_over": True,
                         "action": "guess",
                         "guess": guess,
                         "correct": False,
