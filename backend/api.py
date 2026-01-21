@@ -21,6 +21,38 @@ app.add_middleware(
 game_manager = GameManager()
 
 
+# Helper functions
+def _get_game_or_404():
+    """Helper: Get current game or raise 404."""
+    game = game_manager.get_game()
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game
+
+
+def _process_question_answer(game: Dict, question: str, answer: str) -> None:
+    """Helper: Increment question count and record interaction."""
+    gs = game["game_state"]
+    gs.increment_question()
+    game["player2"].record_interaction(question, answer)
+
+
+def _build_question_answered_response(game: Dict, question: str, answer: str) -> Dict:
+    """Helper: Build response after a question is answered."""
+    gs = game["game_state"]
+    return {
+        "status": "question_answered",
+        "action": "question",
+        "question": question,
+        "answer": answer,
+        "question_count": gs.question_count,
+        "game_status": gs.status,
+        "game_over": not gs.is_playing(),
+        "object": gs.object if not gs.is_playing() else None,
+        "winner": "Player 1" if not gs.is_playing() else None
+    }
+
+
 @app.post("/api/game")
 async def create_game(data: Dict):
     """Create a new game."""
@@ -28,7 +60,7 @@ async def create_game(data: Dict):
     player2_type = data.get("player2_type", "human")
     
     game_manager.create_game(player1_type, player2_type)
-    game = game_manager.get_game()
+    game = game_manager.get_game()  
     game_state = game["game_state"]
     player1 = game["player1"]
     
@@ -53,9 +85,7 @@ async def create_game(data: Dict):
 @app.post("/api/game/object")
 async def set_object(data: Dict):
     """Set object when Player 1 is human."""
-    game = game_manager.get_game()
-    if not game:
-        raise HTTPException(status_code=404, detail="Game not found")
+    game = _get_game_or_404()
     
     obj = data.get("object", "").strip()
     if not obj:
@@ -72,11 +102,10 @@ async def set_object(data: Dict):
 @app.get("/api/game/next")
 async def get_next_action():
     """Get the next action."""
-    game = game_manager.get_game()
-    if not game:
-        raise HTTPException(status_code=404, detail="Game not found")
+    game = _get_game_or_404()
     gs = game["game_state"]
     
+    # Early returns for finished game
     if not gs.is_playing():
         return {
             "status": "game_over",
@@ -86,6 +115,7 @@ async def get_next_action():
             "winner": "Player 2" if gs.status == "won" else "Player 1"
         }
     
+    # If human Player 1 needs to answer, wait
     if game.get("pending_question"):
         return {
             "status": "waiting_for_answer",
@@ -93,14 +123,16 @@ async def get_next_action():
             "question_count": gs.question_count
         }
     
+    # Only proceed if Player 2 is LLM (human Player 2 uses /api/game/action)
     if game["player2_type"] == "llm":
-        action = game["player2"].decide_action()
+        action = game["player2"].decide_action()  # "guess" or "question"
     else:
         return {
             "status": "waiting_for_decision",
             "question_count": gs.question_count
         }
     
+    # Process LLM Player 2's decision
     if action == "guess":
         guess = game["player2"].make_guess()
         if guess:
@@ -117,9 +149,9 @@ async def get_next_action():
                     "winner": "Player 2"
                 }
             else:
-                # Wrong guess - game continues if questions remain
+                # Wrong guess, game continues if questions remain
                 if gs.is_playing():
-                    # Game continues - LLM will decide next action
+                    # Game continues, LLM will decide next action
                     return {
                         "status": "guess_incorrect",
                         "action": "guess",
@@ -128,7 +160,7 @@ async def get_next_action():
                         "question_count": gs.question_count
                     }
                 else:
-                    # Game over - no questions left
+                    # Game over, no questions left
                     return {
                         "status": "game_over",
                         "action": "guess",
@@ -139,34 +171,17 @@ async def get_next_action():
                         "winner": "Player 1"
                     }
     else:
-        # Ask a question (only for LLM Player 2)
-        if game["player2_type"] != "llm":
-            return {
-                "status": "waiting_for_question",
-                "question_count": gs.question_count
-            }
-        
+        # Ask a question (Player 2 is LLM, already verified)
         question = game["player2"].ask_question()
         if question:
-            # Player 1 answers
+            # Get answer from Player 1
             if game["player1_type"] == "llm":
+                # LLM Player 1 answers immediately
                 answer = game["player1"].answer_question(question)
-                gs.increment_question()
-                game["player2"].record_interaction(question, answer)
-                
-                return {
-                    "status": "question_answered",
-                    "action": "question",
-                    "question": question,
-                    "answer": answer,
-                    "question_count": gs.question_count,
-                    "game_status": gs.status,
-                    "game_over": not gs.is_playing(),
-                    "object": gs.object if not gs.is_playing() else None,
-                    "winner": "Player 1" if not gs.is_playing() else None
-                }
+                _process_question_answer(game, question, answer)
+                return _build_question_answered_response(game, question, answer)
             else:
-                # Human Player 1 - wait for answer
+                # Human Player 1, store question and wait for answer
                 game["pending_question"] = question
                 return {
                     "status": "waiting_for_answer",
@@ -180,9 +195,7 @@ async def get_next_action():
 @app.post("/api/game/action")
 async def submit_action(data: Dict):
     """Submit human player action."""
-    game = game_manager.get_game()
-    if not game:
-        raise HTTPException(status_code=404, detail="Game not found")
+    game = _get_game_or_404()
     gs = game["game_state"]
     
     if not gs.is_playing():
@@ -191,6 +204,7 @@ async def submit_action(data: Dict):
     action_type = data.get("action_type")
     content = data.get("content", "").strip()
     
+    # Route to handler based on action_type
     handlers = {
         "set_object": handle_set_object,
         "answer_question": handle_answer_question,
@@ -208,9 +222,7 @@ async def submit_action(data: Dict):
 @app.get("/api/game")
 async def get_game_state():
     """Get current game state."""
-    game = game_manager.get_game()
-    if not game:
-        raise HTTPException(status_code=404, detail="Game not found")
+    game = _get_game_or_404()
     gs = game["game_state"]
     
     return {
