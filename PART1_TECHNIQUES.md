@@ -62,10 +62,11 @@ LLMs need context to make good decisions. Without tracking previous questions an
 
 The `LLMPlayer` class maintains a `conversation_history` list that:
 - Records each question-answer pair
+- Records incorrect guesses to prevent the LLM from repeating them
 - Passes the full history to prompts when asking questions or making guesses
 - Allows the LLM to reason about what it has learned so far
 
-This ensures the LLM's questions become more targeted over time and its guesses are based on accumulated information.
+This ensures the LLM's questions become more targeted over time, its guesses are based on accumulated information, and it doesn't repeat incorrect guesses.
 
 ## Defensive Programming
 

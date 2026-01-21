@@ -6,11 +6,11 @@ This document outlines how to implement automatic evaluation of LLM performance 
 
 ### Metrics for Player 2 (Asking Questions and Guessing the Object)
 
-Player 2's performance depends on how efficiently they narrow down possibilities and how accurately they guess the chosen object. Metrics capture both strategic thinking and final outcomes.
+Player 2's performance depends on how efficiently they narrow down object possibilities and how accurately they guess the chosen object. Metrics must capture both strategic thinking and final outcomes.
 
 **How to measure:**
 
-1. **Ratio of Questions to correct guess:** Track how many questions Player 2 asks before guessing correctly. The lower the better, indicating more efficient questioning strategy.
+1. **Ratio of Questions to correct guess:** Track how many questions Player 2 asks before guessing correctly. The lower the better, indicating a more efficient questioning strategy.
 
 2. **Information gain per question:** Calculate how much each question narrows the search space. Questions that eliminate roughly half the remaining possibilities are optimal. This can be approximated by:
    - Maintaining a set of possible objects
@@ -18,7 +18,7 @@ Player 2's performance depends on how efficiently they narrow down possibilities
 
 3. **Guess accuracy:** Percentage of games where Player 2 guesses correctly within 20 questions. Higher indicates better performance.
 
-4. **Question quality:** Analyse whether questions follow a good strategy (broad to narrow, binary splits). This could be evaluated by:
+4. **Question quality:** Analyse whether questions follow a good strategy (broad to narrow, binary splits). This could be done by:
    - Checking if early questions are categorical (e.g., "Is it an animal?")
    - Verifying that later questions are more specific
    - Measuring how diverse questions are (avoiding repetitive questions)
@@ -43,7 +43,7 @@ Player 1's role is simpler but still important. They must answer truthfully and 
 
 3. **Object diversity:** Track the variety of objects chosen across multiple games. Low diversity suggests the LLM is stuck in a pattern.
 
-To get meaningful results, run many games (e.g., 100-1000) with LLM as both players and record all game states, questions, answers, and outcomes. Compare performance against baselines like human players, random guessing, or optimal binary search strategies.
+To get meaningful results, run multiple games (100-1000) with LLM as both players and record all game states, questions, answers, and outcomes. Compare performance against baselines like human players, random guessing, or optimal binary search strategies.
 
 ## Emergent Behaviour
 
@@ -73,16 +73,11 @@ When an LLM is trained or fine-tuned on its performance in this game, it may dev
 
 Some emergent behaviours could make the game less interesting or fair. We want to prevent the LLM from developing exploitative or repetitive patterns.
 
-Add explicit instructions in prompts to choose varied objects and track object selection history to penalise repetition. If the LLM becomes too predictable, randomly sample from a diverse object pool. Limit how many times the same question type can be asked and encourage exploration of different questioning approaches. This prevents the LLM from memorising optimal question sequences. To further encourage diversity:
-- Introduce randomness in object selection to prevent exploitation
-- Vary prompts slightly to encourage diverse strategies
-- Use temperature settings in the LLM to increase creativity
+The LLM currently favours certain objects (toothbrush, umbrella) even with varied prompts. To address this, increase the temperature setting when calling the LLM for object selection, this encourages more randomness and variety. Add explicit instructions in prompts to choose varied objects and track object selection history to penalise repetition. If the LLM becomes too predictable, randomly sample from a diverse object pool. Limit how many times the same question type can be asked and encourage exploration of different questioning approaches. This prevents the LLM from memorising optimal question sequences. 
 
 ### Encouraging Desirable Behaviour
 
 We want the LLM to develop good strategic thinking, efficient questioning, and appropriate object selection.
 
-Provide explicit feedback in prompts about what constitutes good performance. Include examples of optimal question sequences and highlight efficient games where fewer questions led to correct guesses. Include examples of good vs. poor performance in prompts. Include performance statistics in prompts, such as "You typically guess correctly in 8 questions", and encourage self-reflection about what could be improved. Provide feedback loops that help the LLM learn from its mistakes. Explicitly teach binary search principles in prompts, provide examples of questions that efficiently narrow possibilities, and encourage the LLM to think about information gain.
-
-This evaluation scheme provides a systematic way to measure and improve LLM performance in the Twenty Questions game, whilst monitoring for both desirable and undesirable emergent behaviours.
+Provide explicit feedback in prompts about what constitutes good performance. Include examples of optimal question sequences and highlight efficient games where fewer questions led to correct guesses. Include examples of good vs. poor performance in prompts. Include statistics in prompts, for example "You typically guess correctly in 8 questions". This encourages self-reflection about what could be improved. Provide feedback loops that help the LLM learn from its mistakes. Explicitly teach binary search principles in prompts, provide examples of questions that efficiently narrow possibilities, and encourage the LLM to think about information gain.
 

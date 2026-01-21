@@ -11,7 +11,7 @@ A simple implementation of the Twenty Questions game with LLM integration.
 pip install -r requirements.txt
 ```
 
-2. Create a `.env` file with your API key:
+2. Create a `.env` file in the root directory with your API key:
 ```
 CANDIDATE_API_KEY=your_api_key_here
 ```

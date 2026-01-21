@@ -151,9 +151,9 @@ async def get_next_action():
                     "winner": "Player 2"
                 }
             else:
-                # Wrong guess, game continues if questions remain
+                # Wrong guess, record it so LLM doesn't repeat
+                game["player2"].record_incorrect_guess(guess)
                 if gs.is_playing():
-                    # Game continues, LLM will decide next action
                     return {
                         "status": "guess_incorrect",
                         "action": "guess",

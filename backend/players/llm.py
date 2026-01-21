@@ -94,4 +94,12 @@ class LLMPlayer(Player):
                 "question": question,
                 "answer": answer
             })
+    
+    def record_incorrect_guess(self, guess):
+        """Record an incorrect guess so the LLM doesn't repeat it."""
+        if self.role == PLAYER2:
+            self.conversation_history.append({
+                "question": f"Guess: {guess}",
+                "answer": "incorrect"
+            })
 

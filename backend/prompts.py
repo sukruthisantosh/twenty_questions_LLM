@@ -49,11 +49,24 @@ EXAMPLES OF GOOD QUESTIONS:
 
 Ask ONE strategic yes/no question that will help you narrow down what the object might be. Only ask the question, nothing else."""
 
-    return _append_conversation_history(
-        prompt, 
-        conversation_history, 
-        "Based on the information above, ask your next strategic question:"
-    )
+    # Build history with incorrect guesses highlighted
+    if conversation_history:
+        prompt += "\n\nPrevious questions, answers, and guesses:\n"
+        incorrect_guesses = []
+        for qa in conversation_history:
+            if qa['question'].startswith("Guess:") and qa['answer'] == "incorrect":
+                guess = qa['question'].replace("Guess: ", "")
+                incorrect_guesses.append(guess)
+                prompt += f"Guess: {guess} - INCORRECT\n"
+            else:
+                prompt += f"Q: {qa['question']}\nA: {qa['answer']}\n"
+        
+        if incorrect_guesses:
+            prompt += f"\nNote: You already incorrectly guessed: {', '.join(incorrect_guesses)}. The object is not any of these."
+    
+    prompt += "\n\nBased on the information above, ask your next strategic question:"
+    
+    return prompt
 
 
 def get_make_guess_prompt(conversation_history):
@@ -65,13 +78,26 @@ Think about what you've learned:
 - What are its key characteristics?
 - What objects fit all the answers you've received?
 
-Respond with ONLY the object name, nothing else. Do not add prefixes like "I think it's" or "My guess is" - just state the object."""
+IMPORTANT: If you see any "Guess: X" entries marked as "incorrect" in the history above, DO NOT guess that object again. Think of a different object that fits the information."""
 
-    return _append_conversation_history(
-        prompt,
-        conversation_history,
-        "Based on all the above information, what is your guess?"
-    )
+    # Build history with incorrect guesses highlighted
+    if conversation_history:
+        prompt += "\n\nPrevious questions, answers, and guesses:\n"
+        incorrect_guesses = []
+        for qa in conversation_history:
+            if qa['question'].startswith("Guess:") and qa['answer'] == "incorrect":
+                guess = qa['question'].replace("Guess: ", "")
+                incorrect_guesses.append(guess)
+                prompt += f"Guess: {guess} - INCORRECT (do not guess this again)\n"
+            else:
+                prompt += f"Q: {qa['question']}\nA: {qa['answer']}\n"
+        
+        if incorrect_guesses:
+            prompt += f"\nRemember: You already incorrectly guessed: {', '.join(incorrect_guesses)}. Do not guess these again."
+    
+    prompt += "\n\nRespond with ONLY the object name, nothing else. Do not add prefixes like \"I think it's\" or \"My guess is\" - just state the object."
+    
+    return prompt
 
 
 def get_decide_action_prompt(remaining_questions, conversation_history):
