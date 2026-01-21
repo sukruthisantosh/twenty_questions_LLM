@@ -69,9 +69,9 @@ The frontend will be available at `http://localhost:3000`
 
 ## API Endpoints
 
-- `POST /api/games` - Create a new game
-- `GET /api/games/{game_id}` - Get game state
-- `GET /api/games/{game_id}/next` - Get next action (for LLM players)
-- `POST /api/games/{game_id}/action` - Submit human player action
-- `POST /api/games/{game_id}/object` - Set object (when Player 1 is human)
+- `POST /api/game` - Create a new game
+- `GET /api/game` - Get game state
+- `GET /api/game/next` - Get next action (for LLM players)
+- `POST /api/game/action` - Submit human player action
+- `POST /api/game/object` - Set object (when Player 1 is human)
 

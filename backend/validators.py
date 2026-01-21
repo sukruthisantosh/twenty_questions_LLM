@@ -22,6 +22,7 @@ def validate_guess(guess):
     
     guess = guess.strip()
     
+    # Normalise the guess by removing common prefixes
     patterns_to_remove = [
         r"^i (think|guess|believe) (it'?s |that it'?s )?",
         r"^it'?s (probably |maybe )?",
@@ -35,6 +36,7 @@ def validate_guess(guess):
     
     cleaned = guess
     for pattern in patterns_to_remove:
+        # Use regex to remove the pattern from the guess
         cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
     
     cleaned = cleaned.strip()

@@ -49,6 +49,7 @@ def call_llm(messages, model="gpt-5-mini-2025-08-07", max_retries=MAX_RETRIES):
                 raise LLMError("Invalid API response format")
             
             elif response.status_code == 429:
+                # Rate limit, retry using exponential backoff
                 wait_time = RETRY_DELAY * (2 ** attempt)
                 if attempt < max_retries - 1:
                     time.sleep(wait_time)
@@ -58,16 +59,12 @@ def call_llm(messages, model="gpt-5-mini-2025-08-07", max_retries=MAX_RETRIES):
             else:
                 response.raise_for_status()
         
-        except requests.exceptions.Timeout:
-            last_error = "Request timed out"
-            if attempt < max_retries - 1:
-                time.sleep(RETRY_DELAY * (attempt + 1))
-                continue
-        
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.Timeout, requests.exceptions.RequestException) as e:
+            # Network errors or timeouts, retry using exponential backoff
             last_error = str(e)
             if attempt < max_retries - 1:
-                time.sleep(RETRY_DELAY * (attempt + 1))
+                wait_time = RETRY_DELAY * (2 ** attempt)
+                time.sleep(wait_time)
                 continue
         
         except Exception as e:

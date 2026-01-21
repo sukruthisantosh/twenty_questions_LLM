@@ -1,6 +1,16 @@
 """Prompt templates for LLM interactions in Twenty Questions game."""
 
 
+def _append_conversation_history(prompt, conversation_history, closing_instruction):
+    """Helper function to append conversation history to a prompt."""
+    if conversation_history:
+        prompt += "\n\nPrevious questions and answers:\n"
+        for qa in conversation_history:
+            prompt += f"Q: {qa['question']}\nA: {qa['answer']}\n"
+        prompt += f"\n{closing_instruction}"
+    return prompt
+
+
 def get_set_object_prompt():
     """Generate prompt for Player 1 to choose an object."""
     return """You are playing Twenty Questions as Player 1. Think of a common, concrete object that someone could guess in 20 yes/no questions.
@@ -39,13 +49,11 @@ EXAMPLES OF GOOD QUESTIONS:
 
 Ask ONE strategic yes/no question that will help you narrow down what the object might be. Only ask the question, nothing else."""
 
-    if conversation_history:
-        prompt += "\n\nPrevious questions and answers:\n"
-        for qa in conversation_history:
-            prompt += f"Q: {qa['question']}\nA: {qa['answer']}\n"
-        prompt += "\nBased on the information above, ask your next strategic question:"
-    
-    return prompt
+    return _append_conversation_history(
+        prompt, 
+        conversation_history, 
+        "Based on the information above, ask your next strategic question:"
+    )
 
 
 def get_make_guess_prompt(conversation_history):
@@ -59,13 +67,11 @@ Think about what you've learned:
 
 Respond with ONLY the object name, nothing else. Do not add prefixes like "I think it's" or "My guess is" - just state the object."""
 
-    if conversation_history:
-        prompt += "\n\nPrevious questions and answers:\n"
-        for qa in conversation_history:
-            prompt += f"Q: {qa['question']}\nA: {qa['answer']}\n"
-        prompt += "\nBased on all the above information, what is your guess?"
-    
-    return prompt
+    return _append_conversation_history(
+        prompt,
+        conversation_history,
+        "Based on all the above information, what is your guess?"
+    )
 
 
 def get_decide_action_prompt(remaining_questions, conversation_history):
@@ -83,13 +89,11 @@ Consider:
 
 IMPORTANT: Respond with ONLY the single word "guess" or "question", nothing else."""
 
-    if conversation_history:
-        prompt += "\n\nPrevious questions and answers:\n"
-        for qa in conversation_history:
-            prompt += f"Q: {qa['question']}\nA: {qa['answer']}\n"
-        prompt += "\nBased on the above, should you ask another question or make a guess?"
-    
-    return prompt
+    return _append_conversation_history(
+        prompt,
+        conversation_history,
+        "Based on the above, should you ask another question or make a guess?"
+    )
 
 
 def get_answer_question_prompt(chosen_object, question):

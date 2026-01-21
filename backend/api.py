@@ -21,14 +21,14 @@ app.add_middleware(
 game_manager = GameManager()
 
 
-@app.post("/api/games")
+@app.post("/api/game")
 async def create_game(data: Dict):
     """Create a new game."""
     player1_type = data.get("player1_type", "llm")
     player2_type = data.get("player2_type", "human")
     
-    game_id = game_manager.create_game(player1_type, player2_type)
-    game = game_manager.get_game(game_id)
+    game_manager.create_game(player1_type, player2_type)
+    game = game_manager.get_game()
     game_state = game["game_state"]
     player1 = game["player1"]
     
@@ -39,23 +39,21 @@ async def create_game(data: Dict):
             game_state.set_object(obj)
             status = "playing" if player2_type == "llm" else "waiting_for_question"
             return {
-                "game_id": game_id,
                 "status": status,
                 "question_count": game_state.question_count
             }
         raise HTTPException(status_code=500, detail="Failed to set object")
     
     return {
-        "game_id": game_id,
         "status": "waiting_for_object",
         "message": "Please set the object"
     }
 
 
-@app.post("/api/games/{game_id}/object")
-async def set_object(game_id: str, data: Dict):
+@app.post("/api/game/object")
+async def set_object(data: Dict):
     """Set object when Player 1 is human."""
-    game = game_manager.get_game(game_id)
+    game = game_manager.get_game()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     
@@ -71,10 +69,10 @@ async def set_object(game_id: str, data: Dict):
     }
 
 
-@app.get("/api/games/{game_id}/next")
-async def get_next_action(game_id: str):
+@app.get("/api/game/next")
+async def get_next_action():
     """Get the next action."""
-    game = game_manager.get_game(game_id)
+    game = game_manager.get_game()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     gs = game["game_state"]
@@ -179,10 +177,10 @@ async def get_next_action(game_id: str):
     return {"status": "error", "message": "Unable to determine next action"}
 
 
-@app.post("/api/games/{game_id}/action")
-async def submit_action(game_id: str, data: Dict):
+@app.post("/api/game/action")
+async def submit_action(data: Dict):
     """Submit human player action."""
-    game = game_manager.get_game(game_id)
+    game = game_manager.get_game()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     gs = game["game_state"]
@@ -207,10 +205,10 @@ async def submit_action(game_id: str, data: Dict):
     return handler(game, content)
 
 
-@app.get("/api/games/{game_id}")
-async def get_game_state(game_id: str):
+@app.get("/api/game")
+async def get_game_state():
     """Get current game state."""
-    game = game_manager.get_game(game_id)
+    game = game_manager.get_game()
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     gs = game["game_state"]

@@ -10,7 +10,6 @@ const API_BASE = '/api'
 
 function App() {
     const [mode, setMode] = useState(null)
-    const [gameId, setGameId] = useState(null)
     const [gameState, setGameState] = useState(null)
     const [questionHistory, setQuestionHistory] = useState([])
     const [inputValue, setInputValue] = useState('')
@@ -22,7 +21,7 @@ function App() {
         setLoading(true)
         setError(null)
         try {
-            const response = await fetch(`${API_BASE}/games`, {
+            const response = await fetch(`${API_BASE}/game`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -31,7 +30,6 @@ function App() {
                 })
             })
             const data = await response.json()
-            setGameId(data.game_id)
             setGameState(data)
             setMode({ player1: player1Type, player2: player2Type })
 
@@ -49,12 +47,12 @@ function App() {
     }
 
     const getNextAction = async () => {
-        if (!gameId) return
+        if (!gameState) return
 
         setLoading(true)
         setError(null)
         try {
-            const response = await fetch(`${API_BASE}/games/${gameId}/next`)
+            const response = await fetch(`${API_BASE}/game/next`)
             if (!response.ok) {
                 const errorData = await response.json()
                 throw new Error(errorData.detail || 'Failed to get next action')
@@ -82,12 +80,12 @@ function App() {
     }
 
     const submitAction = async (actionType, content) => {
-        if (!gameId) return
+        if (!gameState) return
 
         setLoading(true)
         setError(null)
         try {
-            const response = await fetch(`${API_BASE}/games/${gameId}/action`, {
+            const response = await fetch(`${API_BASE}/game/action`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -179,7 +177,6 @@ function App() {
 
     const resetGame = () => {
         setMode(null)
-        setGameId(null)
         setGameState(null)
         setQuestionHistory([])
         setInputValue('')
@@ -188,7 +185,7 @@ function App() {
 
     // Auto-advance for LLM players - simplified logic
     useEffect(() => {
-        if (!gameId || !gameState || loading || mode?.player2 !== 'llm') return
+        if (!gameState || loading || mode?.player2 !== 'llm') return
         if (gameState.game_over) return
 
         const status = gameState.status
@@ -204,7 +201,7 @@ function App() {
             }, 1500)
             return () => clearTimeout(timer)
         }
-    }, [gameState, gameId, mode, loading, getNextAction])
+    }, [gameState, mode, loading, getNextAction])
 
     if (!mode) {
         return <ModeSelector onCreateGame={createGame} />
